@@ -1,5 +1,6 @@
 require('dotenv').config()
 const TelegramBot = require('node-telegram-bot-api')
+const { gameOption, againOption } = require('./options')
 
 const token = process.env.BOT_TOKEN
 const bot = new TelegramBot(token, { polling: true })
@@ -21,53 +22,14 @@ bot.setMyCommands([
 
 const obj = {}
 
-const gameOption = {
-	reply_markup: {
-		inline_keyboard: [
-			[
-				{
-					text: '1',
-					callback_data: '1',
-				},
-				{
-					text: '2',
-					callback_data: '2',
-				},
-				{
-					text: '3',
-					callback_data: '3',
-				},
-			],
-			[
-				{
-					text: '4',
-					callback_data: '4',
-				},
-				{
-					text: '5',
-					callback_data: '5',
-				},
-				{
-					text: '6',
-					callback_data: '6',
-				},
-			],
-			[
-				{
-					text: '7',
-					callback_data: '7',
-				},
-				{
-					text: '8',
-					callback_data: '8',
-				},
-				{
-					text: '9',
-					callback_data: '9',
-				},
-			],
-		],
-	},
+const startGame = async chatId => {
+	await bot.sendMessage(
+		chatId,
+		"Kompyuter 0 dan 9gacha son o'yladi siz usha soni topishga harakat qiling"
+	)
+	const randomNumber = Math.floor(Math.random() * 10)
+	obj[chatId] = randomNumber
+	return bot.sendMessage(chatId, "To'g'ri sonni toping", gameOption)
 }
 
 const botFunction = () => {
@@ -92,13 +54,7 @@ const botFunction = () => {
 		}
 
 		if (text === '/game') {
-			await bot.sendMessage(
-				chatId,
-				"Kompyuter 0 dan 9gacha son o'yladi siz usha soni topishga harakat qiling"
-			)
-			const randomNumber = Math.floor(Math.random() * 10)
-			obj[chatId] = randomNumber
-			return bot.sendMessage(chatId, "To'g'ri sonni toping", gameOption)
+			return startGame(chatId)
 		}
 
 		bot.sendMessage(chatId, 'Uzur men sizni gapingizga tushunmayabman!')
@@ -108,15 +64,24 @@ const botFunction = () => {
 		const data = msg.data
 		const chatId = msg.message.chat.id
 
-		if (data === obj[chatId]) {
+		if (data === '/again') {
+			return startGame(chatId)
+		}
+		if (parseInt(data) === obj[chatId]) {
+			bot.sendSticker(
+				chatId,
+				'https://data.chpic.su/stickers/c/celebration/celebration_006.webp'
+			)
 			return bot.sendMessage(
 				chatId,
-				`Tabriklaymiz siz to'g'ri soni topdingiz, Kompyuter o'ylagan son ${obj[chatId]}`
+				`Tabriklaymiz siz to'g'ri soni topdingiz, Kompyuter o'ylagan son ${obj[chatId]}`,
+				againOption
 			)
 		} else {
 			return bot.sendMessage(
 				chatId,
-				`Siz noto'gri sonni tanladingiz, siz tanlagan son ${data}, Kompyuter o'ylagan son ${obj[chatId]}`
+				`Siz noto'gri sonni tanladingiz, siz tanlagan son ${data}, Kompyuter o'ylagan son ${obj[chatId]}`,
+				againOption
 			)
 		}
 	})
